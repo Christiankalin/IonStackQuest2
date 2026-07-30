@@ -1,21 +1,9 @@
-# IonStack exploit for Meta Quest 3
+# IonStack exploit for Meta Quest 2
 
-Root exploit for Meta Quest 3, adapted from IonStack (CVE-2026-43499) in [CyberMeowfia](https://github.com/NebuSec/CyberMeowfia).
+Root exploit for Meta Quest 2, adapted from IonStack (CVE-2026-43499) in [CyberMeowfia](https://github.com/NebuSec/CyberMeowfia).
 
 # Use at your own risk!!!
 
-
-## Device Info
-
-| Item | Value |
-|------|-------|
-| Device | Meta Quest 3 |
-| Architecture | aarch64 |
-| Kernel | `Linux localhost 5.10.240-g69827d40d782 #1 SMP PREEMPT Mon Jun 1 13:01:51 PDT 2026 aarch64 Toybox` |
-| Incremental | `52168470043600520` |
-| mm_struct | order-2 |
-
-Kernels of similar versions are likely to work without re-adaptation.
 
 ## Usage
 
@@ -36,7 +24,7 @@ If your firmware version differs, you can auto-generate the config via GitHub Ac
    ```
 3. **Download the matching firmware.** If you don't know the download URL, use the following (replace `{incremental}` with the value from the previous step):
    ```
-   https://files.cocaine.trade/firmware/meta/Quest%203/q3_{incremental}.zip
+   https://files.cocaine.trade/firmware/meta/Quest%202/q2_{incremental}.zip
    ```
 4. **Run the Action:** In your forked repo, run the `generate-ionstack-config` workflow, fill in the firmware download URL, wait for completion, and download the generated `ionstack.conf`.
 
