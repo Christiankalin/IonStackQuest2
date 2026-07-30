@@ -27,7 +27,7 @@ If your firmware version differs, you can auto-generate the config via GitHub Ac
    ```
 3. **Download the matching firmware.** If you don't know the download URL, use the following (replace `{incremental}` with the value from the previous step):
    ```
-   https://files.cocaine.trade/firmware/meta/Quest%202/q2_{incremental}.zip
+   https://files.cocaine.trade/firmware/meta/Quest%202/q2_{incremental}.zip 
    ```
 4. **Run the Action:** In your forked repo, run the `generate-ionstack-config` workflow, fill in the firmware download URL, wait for completion, and download the generated `ionstack.conf`.
 
