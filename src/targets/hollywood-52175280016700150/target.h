@@ -12,6 +12,10 @@
 #ifndef TARGET_H
 #define TARGET_H
 
+// kernel 4.19 futex_key layout: address at offset 0, mm at offset 8
+// linux 5.x swapped these — futex_hash.h uses this define to pick the right order
+#define FUTEX_KEY_ADDR_FIRST 1
+
 #define BUILD_VARIANT_LABEL "hollywood_q2_52175280016700150"
 #define BUILD_FINGERPRINT "oculus/hollywood/hollywood:14/SP1A.210812.016/52175280016700150:user/release-keys"
 

